@@ -59,6 +59,28 @@ async function run() {
                 console.log(result)
                 res.json(result);
             }
+        });
+
+        // Get donors api
+        app.get('/donors/:bloodGroup', async (req, res) => {
+            const bloodGroup = req.params.bloodGroup;
+            const query = { bloodGroup: bloodGroup }
+            const result = await donorsCollection.find(query).toArray();
+
+            if (result.length > 0) {
+                const donors = result.filter(dt => {
+                    let ageInMilliseconds = new Date() - new Date(dt.lDonate);
+                    let age = Math.floor(ageInMilliseconds / 1000 / 60 / 60 / 24);
+                    return age > 90
+                })
+                res.json(donors)
+
+            }
+            else {
+                res.status(404).send({
+                    message: 'Donor Not Found'
+                });
+            }
         })
 
     }
@@ -74,4 +96,7 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
     console.log(`app listening at http://localhost:${port}`)
-})
+});
+
+
+// https://kcp-blood-bank-server.herokuapp.com/
