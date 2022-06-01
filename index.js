@@ -18,32 +18,9 @@ async function run() {
         await client.connect();
         const database = client.db('blood_bank');
         const donorsCollection = database.collection('donors')
+        const requestCollection = database.collection('requests')
 
-        // Get login Api
-        app.post('/login', async (req, res) => {
-            console.log(req.body)
-            const query = { email: req.body.email, password: req.body.password }
-            const result = await donorsCollection.findOne(query);
-            if (result) {
-                const user = {
-                    address: result.address,
-                    age: result.age,
-                    bloodGroup: result.bloodGroup,
-                    email: result.email,
-                    gander: result.gander,
-                    lDonate: result.lDonate,
-                    mobile: result.mobile,
-                    name: result.name,
-                    _id: result._id
-                }
-                res.json(user)
-            }
-            else {
-                res.status(401).send({
-                    message: 'Wrong email/password !'
-                });
-            }
-        })
+
 
         // Post donor Api
         app.post('/donors', async (req, res) => {
@@ -56,7 +33,6 @@ async function run() {
             }
             else {
                 const result = await donorsCollection.insertOne(donor);
-                console.log(result)
                 res.json(result);
             }
         });
@@ -80,6 +56,65 @@ async function run() {
                 res.status(404).send({
                     message: 'Donor Not Found'
                 });
+            }
+        });
+
+        // get single blood group
+        app.get('/donor/:email', async (req, res) => {
+            const query = { email: req.params.email }
+            const result = await donorsCollection.findOne(query);
+            let isAdmin = false;
+            if (result?.role === 'admin') {
+                isAdmin = true;
+            }
+            if (result) {
+                const user = {
+                    bloodGroup: result.bloodGroup,
+                    _id: result._id,
+                    admin: isAdmin
+                }
+                res.json(user)
+            }
+            else {
+                res.status(401).send({
+                    message: 'user not found'
+                });
+            }
+        })
+
+
+        // get admin api
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await donorsCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        });
+
+        // post request api
+        app.post('/request', async (req, res) => {
+            const data = req.body
+            const result = await requestCollection.insertOne(data);
+            res.json(result);
+        });
+
+
+        // get blood request api
+        app.get('/request/:q', async (req, res) => {
+            const query = req.params.q;
+            let result;
+            if (query === 'all') {
+                result = await requestCollection.find({}).toArray();
+                res.json(result)
+            }
+            else {
+                result = await requestCollection.find({ bloodGroup: query }).toArray()
+                console.log(query, result)
+                res.json(result)
             }
         })
 
