@@ -179,6 +179,16 @@ async function run() {
                 },
             };
             const result = await requestCollection.updateOne(filter, updateDoc, options);
+            if (result) {
+                const date = new Date()
+                const updateDate = {
+                    $set: {
+                        lDonate: date.toLocaleDateString()
+                    }
+                }
+                const fil = { email: updatedReq.donor }
+                const update = await donorsCollection.updateOne(fil, updateDate, options);
+            }
             res.json(result);
         });
 
