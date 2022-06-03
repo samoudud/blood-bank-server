@@ -100,7 +100,8 @@ async function run() {
                 const user = {
                     bloodGroup: result.bloodGroup,
                     _id: result._id,
-                    admin: isAdmin
+                    admin: isAdmin,
+                    lDonate: result.lDonate
                 }
                 res.json(user)
             }
