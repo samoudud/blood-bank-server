@@ -21,6 +21,34 @@ async function run() {
         const requestCollection = database.collection('requests')
 
 
+        // get all donor api
+        app.get('/allDonor', async (req, res) => {
+            const result = await donorsCollection.find({}).toArray();
+
+            const users = []
+            if (result) {
+                result.forEach(re => {
+                    let user = {
+                        displayName: re.displayName,
+                        address: re.address,
+                        age: re.age,
+                        bloodGroup: re.bloodGroup,
+                        email: re.email,
+                        gander: re.gander,
+                        lDonate: re.lDonate,
+                        mobile: re.mobile,
+                        name: re.name,
+                        _id: re._id
+                    }
+                    users.push(user)
+
+                })
+            }
+            console.log(users)
+            res.json(users);
+        });
+
+
 
         // Post donor Api
         app.post('/donors', async (req, res) => {
@@ -36,6 +64,7 @@ async function run() {
                 res.json(result);
             }
         });
+
 
         // Get donors api
         app.get('/donors/:bloodGroup', async (req, res) => {
@@ -80,6 +109,15 @@ async function run() {
                     message: 'user not found'
                 });
             }
+        });
+
+        // put admin api
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const doc = { $set: { role: 'admin' } }
+            const result = await donorsCollection.updateOne(filter, doc);
+            res.json(result);
         })
 
 
@@ -94,6 +132,16 @@ async function run() {
             }
             res.json({ admin: isAdmin });
         });
+
+
+        // delete request api
+        app.delete('/allDonor/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await donorsCollection.deleteOne(query);
+            res.json(result);
+        });
+
 
         // post request api
         app.post('/request', async (req, res) => {
@@ -127,6 +175,7 @@ async function run() {
             const updateDoc = {
                 $set: {
                     status: updatedReq.status,
+                    donor: updatedReq.donor
                 },
             };
             const result = await requestCollection.updateOne(filter, updateDoc, options);
