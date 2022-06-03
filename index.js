@@ -37,14 +37,12 @@ async function run() {
                         gander: re.gander,
                         lDonate: re.lDonate,
                         mobile: re.mobile,
-                        name: re.name,
                         _id: re._id
                     }
                     users.push(user)
 
                 })
             }
-            console.log(users)
             res.json(users);
         });
 
@@ -192,6 +190,40 @@ async function run() {
             }
             res.json(result);
         });
+
+
+        // get single donor
+        app.get('/request/donor/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await requestCollection.findOne({ email: email });
+            if (result) {
+                if (result?.status === 'accepted') {
+                    const re = await donorsCollection.findOne({ email: result.donor })
+                    res.json({
+                        status: 'accepted',
+                        displayName: re.displayName,
+                        address: re.address,
+                        age: re.age,
+                        bloodGroup: re.bloodGroup,
+                        email: re.email,
+                        gander: re.gander,
+                        mobile: re.mobile,
+                    })
+                }
+                else {
+                    res.json({
+                        status: 'pending'
+                    })
+                }
+            }
+            else {
+                res.status(401).send({
+                    message: 'Request Not Found'
+                });
+            }
+
+
+        })
 
         // delete request api
         app.delete('/request/:id', async (req, res) => {
