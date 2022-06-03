@@ -112,11 +112,35 @@ async function run() {
                 res.json(result)
             }
             else {
-                result = await requestCollection.find({ bloodGroup: query }).toArray()
+                result = await requestCollection.find({ bloodGroup: query, status: 'pending' }).toArray()
                 console.log(query, result)
                 res.json(result)
             }
+        });
+
+        // put request api
+        app.put('/request/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedReq = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: updatedReq.status,
+                },
+            };
+            const result = await requestCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        });
+
+        // delete request api
+        app.delete('/request/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await requestCollection.deleteOne(query);
+            res.json(result);
         })
+
 
     }
     finally {
